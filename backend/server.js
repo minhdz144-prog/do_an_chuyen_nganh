@@ -15,6 +15,10 @@ const startServer = async () => {
       );
     });
 
+    // Initialize Socket.io
+    const socket = require('./src/socket');
+    socket.init(server);
+
     // Xử lý lỗi bất đồng bộ chưa được catch (vd: DB ngắt kết nối sau khi start)
     process.on('unhandledRejection', (err) => {
       console.error('UNHANDLED REJECTION:', err.name, err.message);

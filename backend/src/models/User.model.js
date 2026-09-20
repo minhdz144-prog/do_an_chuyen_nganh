@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema({
     match: [/^\S+@\S+\.\S+$/, 'Email không hợp lệ'],
   },
   password: {
-    type: String, required: [true, 'Mật khẩu không được để trống'],
+    type: String,
     minlength: [6, 'Mật khẩu tối thiểu 6 ký tự'],
     select: false, 
   },
@@ -27,8 +27,15 @@ const userSchema = new mongoose.Schema({
   avatar:   String,
   phone:    String,
   isActive: { type: Boolean, default: true },
+  // ★ Google OAuth
+  googleId:     { type: String, sparse: true },
+  authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
+  // ★ Forgot Password OTP
+  resetPasswordOTP:     { type: String, select: false },
+  resetPasswordExpires: { type: Date,   select: false },
   candidateProfile: candidateProfileSchema,
   companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
+  savedJobs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Job' }],  // ★ F.4: Bookmark jobs
 }, { timestamps: true });
 
 userSchema.pre('save', async function () {

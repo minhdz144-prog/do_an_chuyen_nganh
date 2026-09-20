@@ -1,0 +1,55 @@
+# ==============================
+# Root .gitignore — IT Job Portal
+# ==============================
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment files — KHÔNG BAO GIỜ commit lên Git
+.env
+.env.local
+.env.development
+.env.production
+.env.*
+
+# Next.js build output
+frontend/.next/
+frontend/out/
+frontend/build/
+
+# Backend build
+backend/dist/
+backend/build/
+
+# Uploads (file người dùng upload — không cần trong repo)
+backend/uploads/
+frontend/public/uploads/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+*.pem
+
+# TypeScript
+*.tsbuildinfo
+frontend/next-env.d.ts
+
+# Vercel
+.vercel
+
+# Temp scripts (vứt vào root khi fix nhanh)
+add_dark_mode.js
+refactor_toast.js
+replace_images.js
+temp_replace.js
+
+# IDE
+.vscode/settings.json
+.idea/

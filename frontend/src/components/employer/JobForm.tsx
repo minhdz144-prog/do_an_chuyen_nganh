@@ -11,6 +11,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
+import axiosInstance from '@/lib/axios';
 
 const jobSchema = z.object({
   title: z.string().min(5, 'Tiêu đề phải có ít nhất 5 ký tự'),
@@ -36,6 +38,7 @@ export default function JobForm({ mode, initialData, onSubmit, isSubmitting = fa
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState('');
   const [skillsError, setSkillsError] = useState('');
+  const [isGeneratingJD, setIsGeneratingJD] = useState(false);
 
   const {
     register,
@@ -77,6 +80,34 @@ export default function JobForm({ mode, initialData, onSubmit, isSubmitting = fa
 
   const handleRemoveSkill = (skillToRemove: string) => {
     setSkills(skills.filter(s => s !== skillToRemove));
+  };
+
+  const handleGenerateJD = async () => {
+    const title = watch('title');
+    if (!title || title.length < 5) {
+      toast.error('Vui lòng nhập Tiêu đề công việc trước khi nhờ AI viết.');
+      return;
+    }
+    if (skills.length === 0) {
+      toast.error('Vui lòng nhập Kỹ năng yêu cầu trước khi nhờ AI viết.');
+      return;
+    }
+
+    try {
+      setIsGeneratingJD(true);
+      const res: any = await axiosInstance.post('/ai/job-description', {
+        title,
+        skills
+      });
+      if (res.success) {
+        setValue('description', res.data.description, { shouldValidate: true });
+        toast.success('Đã tự động điền Mô tả công việc bằng AI!');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Có lỗi khi sinh JD');
+    } finally {
+      setIsGeneratingJD(false);
+    }
   };
 
   const handleFormSubmit = async (data: JobFormValues) => {
@@ -157,9 +188,9 @@ export default function JobForm({ mode, initialData, onSubmit, isSubmitting = fa
           <Label>Kỹ năng yêu cầu <span className="text-rose-500">*</span></Label>
           <div className="flex flex-wrap gap-2 mb-2">
             {skills.map(skill => (
-              <span key={skill} className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-sm font-medium border border-emerald-200">
+              <span key={skill} className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium border border-primary/20">
                 {skill}
-                <button type="button" onClick={() => handleRemoveSkill(skill)} className="text-emerald-500 hover:text-emerald-700">
+                <button type="button" onClick={() => handleRemoveSkill(skill)} className="text-primary/90 hover:text-primary">
                   <X className="w-4 h-4" />
                 </button>
               </span>
@@ -171,12 +202,24 @@ export default function JobForm({ mode, initialData, onSubmit, isSubmitting = fa
             onKeyDown={handleAddSkill}
             placeholder="Nhập kỹ năng và nhấn Enter..." 
           />
-          <p className="text-xs text-slate-500">Nhấn Enter để thêm kỹ năng mới</p>
+          <p className="text-xs text-muted-foreground dark:text-muted-foreground">Nhấn Enter để thêm kỹ năng mới</p>
           {skillsError && <p className="text-xs text-rose-500">{skillsError}</p>}
         </div>
 
         <div className="space-y-2 md:col-span-2">
-          <Label>Mô tả công việc (Yêu cầu, Quyền lợi, Trách nhiệm) <span className="text-rose-500">*</span></Label>
+          <div className="flex justify-between items-center">
+            <Label>Mô tả công việc (Yêu cầu, Quyền lợi, Trách nhiệm) <span className="text-rose-500">*</span></Label>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              onClick={handleGenerateJD} 
+              disabled={isGeneratingJD} 
+              className="text-primary hover:text-primary hover:bg-primary/10 border-primary/20 h-8 text-xs px-3"
+            >
+              {isGeneratingJD ? 'AI đang viết...' : '✨ AI Viết JD'}
+            </Button>
+          </div>
           <Textarea 
             {...register('description')} 
             placeholder="Nhập chi tiết mô tả công việc..." 
@@ -193,7 +236,7 @@ export default function JobForm({ mode, initialData, onSubmit, isSubmitting = fa
         <Button 
           type="submit" 
           disabled={isSubmitting}
-          className="bg-emerald-500 hover:bg-emerald-600 text-white px-8"
+          className="bg-primary hover:bg-primary text-white px-8"
         >
           {isSubmitting ? 'Đang xử lý...' : mode === 'create' ? 'Đăng tin tuyển dụng' : 'Lưu thay đổi'}
         </Button>

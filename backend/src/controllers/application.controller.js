@@ -1,13 +1,17 @@
 // src/controllers/application.controller.js
 const Application = require('../models/Application.model');
 const Job = require('../models/Job.model');
+const User = require('../models/User.model');
 const ApiResponse = require('../utils/ApiResponse');
 const ApiError = require('../utils/ApiError');
+const { sendApplicationStatusEmail } = require('../services/email.service');
+const Notification = require('../models/Notification.model');
+const socket = require('../socket');
 
 const applyToJob = async (req, res, next) => {
   try {
     const { jobId } = req.params;
-    const { coverLetter, resumeUrl } = req.body;
+    const { coverLetter, resumeUrl } = req.body || {};
     const job = await Job.findById(jobId);
     
     if (!job || job.status !== 'active') return next(ApiError.notFound('Tin tuyển dụng không tồn tại hoặc đã đóng'));
@@ -20,6 +24,27 @@ const applyToJob = async (req, res, next) => {
       resumeUrl: resumeUrl || req.user.candidateProfile?.resumeUrl,
       statusHistory: [{ status: Application.STATES.APPLIED, changedBy: req.user._id, note: 'Ứng viên nộp hồ sơ' }],
     });
+
+    // Lưu thông báo và phát sự kiện real-time cho employer
+    try {
+      await Notification.create({
+        recipient: job.employer,
+        type: 'new_application',
+        title: 'Hồ sơ ứng tuyển mới',
+        message: `Vị trí "${job.title}" vừa nhận được 1 hồ sơ mới`,
+        link: `/employer/applications?job=${job._id}`,
+      });
+
+      const io = socket.getIo();
+      io.to(job.employer.toString()).emit('new_application', {
+        message: `Bạn có một hồ sơ ứng tuyển mới cho vị trí "${job.title}"`,
+        jobId: job._id,
+        applicationId: application._id
+      });
+    } catch (err) {
+      console.error('Lỗi lưu thông báo hoặc socket.io new_application:', err.message);
+    }
+
     ApiResponse.created(res, { application }, 'Nộp hồ sơ thành công!');
   } catch (error) {
     if (error.code === 11000) return next(ApiError.conflict('Bạn đã nộp hồ sơ cho vị trí này rồi'));
@@ -44,6 +69,43 @@ const updateApplicationStatus = async (req, res, next) => {
     if (status === Application.STATES.INTERVIEW && interviewDate) application.interviewDate = new Date(interviewDate);
     
     await application.save();
+
+    // Lưu thông báo và phát sự kiện real-time cho candidate
+    try {
+      await Notification.create({
+        recipient: application.candidate,
+        type: 'status_changed',
+        title: 'Cập nhật trạng thái ứng tuyển',
+        message: `Trạng thái hồ sơ vị trí "${application.job.title}" đã chuyển sang "${status}"`,
+        link: `/candidate/applications`,
+      });
+
+      const io = socket.getIo();
+      io.to(application.candidate.toString()).emit('status_changed', {
+        message: `Trạng thái hồ sơ vị trí "${application.job.title}" đã chuyển sang "${status}"`,
+        jobId: application.job._id,
+        applicationId: application._id,
+        status: status
+      });
+    } catch (err) {
+      console.error('Lỗi lưu thông báo hoặc socket.io status_changed:', err.message);
+    }
+
+    // ★ Observer Pattern: gửi email thông báo fire-and-forget
+    // Không await — lỗi gửi email không ảnh hưởng response
+    const candidate = await User.findById(application.candidate).select('name email');
+    if (candidate) {
+      sendApplicationStatusEmail({
+        candidateEmail: candidate.email,
+        candidateName: candidate.name,
+        jobTitle: application.job.title,
+        companyName: req.user.name, // tên employer (tạm dùng, lý tưởng là tên công ty)
+        newStatus: status,
+        interviewDate: application.interviewDate,
+        interviewNote: note || '',
+      }); // Không await!
+    }
+
     ApiResponse.success(res, { application }, `Cập nhật trạng thái thành công → '${status}'`);
   } catch (error) { next(error); }
 };

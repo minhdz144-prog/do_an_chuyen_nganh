@@ -11,6 +11,9 @@ const applicationRoutes = require('./routes/application.routes');
 const companyRoutes = require('./routes/company.routes');
 const userRoutes = require('./routes/user.routes');       // ★ Gap D: user profile self-update
 const adminRoutes = require('./routes/admin.routes');     // ★ Gap E: admin management
+const uploadRoutes = require('./routes/upload.routes');   // ★ F.3: file upload
+const notificationRoutes = require('./routes/notification.routes');
+const path = require('path');
 const errorMiddleware = require('./middlewares/error.middleware');
 
 const app = express();
@@ -33,6 +36,8 @@ app.use('/api', apiLimiter);
 // ─── Body Parser ─────────────────────────────────────
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
+// ─── Standardize API Responses ──────────────────────
+app.use(require('./middlewares/responseHandler'));
 // ─── Routes ─────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
@@ -40,6 +45,12 @@ app.use('/api/applications', applicationRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/users', userRoutes);     // ★ Mới thêm: /api/users/me
 app.use('/api/admin', adminRoutes);    // ★ Mới thêm: /api/admin/*
+app.use('/api/uploads', uploadRoutes); // ★ F.3: file upload
+app.use('/api/stats', require('./routes/stats.routes')); // ★ B.4: Public stats
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/ai', require('./routes/ai.routes'));      // ★ Gen-AI: Interview Questions + Cover Letter
+// ★ F.3: Serve uploaded files as static assets
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // ─── Health Check ────────────────────────────────────
 app.get('/api/health', (_, res) =>
   res.json({ success: true, status: 'OK', timestamp: new Date() })

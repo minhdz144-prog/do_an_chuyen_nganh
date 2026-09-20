@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'sonner';
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
@@ -13,8 +14,7 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
 
   const [initialData, setInitialData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -22,7 +22,7 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
         const res: any = await axiosInstance.get(`/jobs/${id}`);
         setInitialData(res.data.job);
       } catch (error: any) {
-        setErrorMsg('Không thể tải thông tin tin tuyển dụng.');
+        toast.error('Không thể tải thông tin tin tuyển dụng.');
       } finally {
         setLoading(false);
       }
@@ -33,8 +33,7 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
   const onSubmit = async (data: any) => {
     try {
       setIsSubmitting(true);
-      setErrorMsg('');
-
+      
       const payload = {
         title: data.title,
         description: data.description,
@@ -50,32 +49,27 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
       router.push('/employer/jobs');
       router.refresh();
     } catch (error: any) {
-      setErrorMsg(error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật tin.');
+      toast.error(error.message || 'Có lỗi xảy ra khi cập nhật tin.');
       setIsSubmitting(false);
     }
   };
 
   if (loading) {
-    return <div className="p-10 text-center text-slate-500">Đang tải dữ liệu...</div>;
+    return <div className="p-10 text-center text-muted-foreground dark:text-muted-foreground">Đang tải dữ liệu...</div>;
   }
 
   return (
-    <div className="max-w-4xl bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
-      <div className="mb-8 border-b border-slate-100 pb-6 flex items-center gap-4">
-        <Link href="/employer/jobs" className="text-slate-400 hover:text-slate-900 transition-colors">
+    <div className="max-w-4xl bg-card rounded-3xl p-8 border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div className="mb-8 border-b border-border pb-6 flex items-center gap-4">
+        <Link href="/employer/jobs" className="text-muted-foreground/80 dark:text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="w-6 h-6" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Chỉnh sửa tin tuyển dụng</h1>
-          <p className="text-slate-500 mt-1">Cập nhật thông tin chi tiết cho vị trí này.</p>
+          <h1 className="text-2xl font-bold text-foreground">Chỉnh sửa tin tuyển dụng</h1>
+          <p className="text-muted-foreground dark:text-muted-foreground mt-1">Cập nhật thông tin chi tiết cho vị trí này.</p>
         </div>
       </div>
 
-      {errorMsg && (
-        <div className="mb-6 p-4 bg-rose-50 text-rose-600 rounded-xl border border-rose-100">
-          {errorMsg}
-        </div>
-      )}
 
       {initialData && (
         <JobForm mode="edit" initialData={initialData} onSubmit={onSubmit} isSubmitting={isSubmitting} />

@@ -1,20 +1,28 @@
 import Link from 'next/link';
-import { Briefcase } from 'lucide-react';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <Link href="/" className="inline-flex items-center gap-2 justify-center text-3xl font-bold text-slate-900 tracking-tight">
-          <Briefcase className="w-8 h-8 text-emerald-500" />
-          <span>IT Job<span className="text-emerald-500">Portal</span></span>
-        </Link>
-      </div>
+    <div 
+      className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative bg-black"
+      style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1454496522488-7a8e488e8606?q=80&w=2500&auto=format&fit=crop')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      {/* Dark overlay for better readability */}
+      <div className="absolute inset-0 bg-black/40" />
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-sm border border-slate-100 sm:rounded-2xl sm:px-10">
-          {children}
+      <div className="relative z-10 w-full max-w-md">
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-flex items-center gap-2 justify-center text-3xl font-bold text-white tracking-tight drop-shadow-md hover:scale-105 transition-transform">
+            <img src="/images/logo.svg" alt="IT Job Portal" className="w-10 h-10 drop-shadow-md" />
+            <span>IT Job<span className="text-emerald-400">Portal</span></span>
+          </Link>
         </div>
+
+        {children}
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -12,7 +13,7 @@ const STATUS_MAP: Record<string, { label: string; color: string }> = {
   applied: { label: 'Đã nộp', color: 'bg-blue-100 text-blue-800' },
   reviewing: { label: 'Đang xem xét', color: 'bg-amber-100 text-amber-800' },
   interview: { label: 'Phỏng vấn', color: 'bg-purple-100 text-purple-800' },
-  offered: { label: 'Đề nghị làm việc', color: 'bg-emerald-100 text-emerald-800' },
+  offered: { label: 'Đề nghị làm việc', color: 'bg-primary/20 text-emerald-800' },
   rejected: { label: 'Từ chối', color: 'bg-rose-100 text-rose-800' },
 };
 
@@ -40,21 +41,21 @@ export default function CandidateApplicationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-        <h1 className="text-2xl font-bold text-slate-900">Việc làm đã ứng tuyển</h1>
-        <p className="text-slate-500 mt-1">Theo dõi trạng thái các hồ sơ bạn đã gửi đến nhà tuyển dụng.</p>
+      <div className="bg-card p-6 rounded-2xl border border-border shadow-sm">
+        <h1 className="text-2xl font-bold text-foreground">Việc làm đã ứng tuyển</h1>
+        <p className="text-muted-foreground dark:text-muted-foreground mt-1">Theo dõi trạng thái các hồ sơ bạn đã gửi đến nhà tuyển dụng.</p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+      <div className="bg-card rounded-2xl border border-border shadow-sm p-6">
         {loading ? (
-          <div className="text-center py-10 text-slate-500">Đang tải dữ liệu...</div>
+          <div className="text-center py-10 text-muted-foreground dark:text-muted-foreground">Đang tải dữ liệu...</div>
         ) : applications.length === 0 ? (
           <div className="text-center py-16">
-            <h3 className="text-lg font-medium text-slate-900 mb-2">Chưa ứng tuyển công việc nào</h3>
-            <p className="text-slate-500 mb-6">Hãy khám phá các cơ hội nghề nghiệp phù hợp với bạn.</p>
+            <h3 className="text-lg font-medium text-foreground mb-2">Chưa ứng tuyển công việc nào</h3>
+            <p className="text-muted-foreground dark:text-muted-foreground mb-6">Hãy khám phá các cơ hội nghề nghiệp phù hợp với bạn.</p>
             <Link 
               href="/jobs" 
-              className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-medium transition-colors inline-block"
+              className="bg-primary hover:bg-primary text-white px-6 py-2.5 rounded-xl font-medium transition-colors inline-block"
             >
               Tìm việc ngay
             </Link>
@@ -62,23 +63,23 @@ export default function CandidateApplicationsPage() {
         ) : (
           <div className="space-y-4">
             {applications.map((app) => (
-              <div key={app._id} className="border border-slate-100 rounded-xl p-5 hover:border-emerald-200 hover:shadow-sm transition-all">
+              <div key={app._id} className="border border-border rounded-xl p-5 hover:border-primary/20 hover:shadow-sm transition-all">
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                   <div className="flex gap-4">
                     {app.job?.company?.logo ? (
-                      <img src={app.job.company.logo} alt="logo" className="w-16 h-16 rounded-xl border border-slate-100 object-cover" />
+                      <div className="w-16 h-16 rounded-xl border border-border overflow-hidden relative flex-shrink-0"><Image src={app.job.company.logo} alt="logo" fill sizes="64px" className="object-cover" /></div>
                     ) : (
-                      <div className="w-16 h-16 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400">
+                      <div className="w-16 h-16 bg-slate-100 rounded-xl flex items-center justify-center text-muted-foreground/80 dark:text-muted-foreground">
                         <Building2 className="w-8 h-8" />
                       </div>
                     )}
                     <div>
-                      <Link href={`/jobs/${app.job?._id}`} className="text-lg font-bold text-slate-900 hover:text-emerald-600">
+                      <Link href={`/jobs/${app.job?._id}`} className="text-lg font-bold text-foreground hover:text-primary">
                         {app.job?.title || 'Công việc đã bị xóa'}
                       </Link>
-                      <div className="text-slate-600 font-medium mb-2">{app.job?.company?.name}</div>
+                      <div className="text-muted-foreground dark:text-muted-foreground font-medium mb-2">{app.job?.company?.name}</div>
                       
-                      <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-500">
+                      <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground dark:text-muted-foreground">
                         <span className="flex items-center gap-1.5">
                           <MapPin className="w-4 h-4" /> {app.job?.location}
                         </span>
@@ -93,7 +94,7 @@ export default function CandidateApplicationsPage() {
                   </div>
                   
                   <div className="flex md:flex-col items-center md:items-end justify-between md:justify-start">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${STATUS_MAP[app.status]?.color || 'bg-slate-100 text-slate-600'}`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${STATUS_MAP[app.status]?.color || 'bg-slate-100 text-muted-foreground dark:text-muted-foreground'}`}>
                       {STATUS_MAP[app.status]?.label || app.status}
                     </span>
                     

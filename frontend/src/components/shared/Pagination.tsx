@@ -22,7 +22,14 @@ export default function Pagination({ totalPages, currentPage }: PaginationProps)
   };
 
   const handlePageChange = (page: number) => {
-    router.push(`/jobs${createPageUrl(page)}`);
+    router.push(`/jobs${createPageUrl(page)}`, { scroll: false });
+    
+    // Tìm container và cuộn mượt mà lên đó
+    const element = document.getElementById('job-list-container');
+    if (element) {
+      const y = element.getBoundingClientRect().top + window.scrollY - 100;
+      window.scrollTo({ top: y, behavior: 'auto' });
+    }
   };
 
   return (
@@ -32,12 +39,12 @@ export default function Pagination({ totalPages, currentPage }: PaginationProps)
         size="icon"
         onClick={() => handlePageChange(currentPage - 1)}
         disabled={currentPage <= 1}
-        className="border-slate-200 text-slate-600"
+        className="border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-muted-foreground"
       >
         <ChevronLeft className="w-4 h-4" />
       </Button>
       
-      <span className="text-sm font-medium text-slate-700 px-4">
+      <span className="text-sm font-medium text-foreground/80 px-4">
         Trang {currentPage} / {totalPages}
       </span>
 
@@ -46,7 +53,7 @@ export default function Pagination({ totalPages, currentPage }: PaginationProps)
         size="icon"
         onClick={() => handlePageChange(currentPage + 1)}
         disabled={currentPage >= totalPages}
-        className="border-slate-200 text-slate-600"
+        className="border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-muted-foreground"
       >
         <ChevronRight className="w-4 h-4" />
       </Button>

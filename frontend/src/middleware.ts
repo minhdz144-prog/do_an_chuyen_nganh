@@ -23,7 +23,8 @@ export async function middleware(request: NextRequest) {
 
   try {
     // 3. Xác thực JWT bằng thư viện jose (chạy được trên Edge runtime)
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'super_secret_key'); // LƯU Ý: Phải khớp với backend
+    if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not configured');
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
     const { payload } = await jwtVerify(token, secret);
     const role = payload.role as string;
 

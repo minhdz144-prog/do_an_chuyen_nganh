@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'sonner';
 
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -30,8 +31,7 @@ export default function EmployerCompanyPage() {
   const [companyData, setCompanyData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [successMsg, setSuccessMsg] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-
+  
   const { register, handleSubmit, reset, setValue, watch, formState: { errors, isSubmitting } } = useForm<any>({
     resolver: zodResolver(companySchema),
   });
@@ -64,24 +64,23 @@ export default function EmployerCompanyPage() {
 
   const onSubmit = async (data: CompanyFormValues) => {
     try {
-      setErrorMsg('');
-      setSuccessMsg('');
+            setSuccessMsg('');
       const res: any = await axiosInstance.put(`/companies/${user?.companyId}`, data);
       setCompanyData(res.data.company);
       setSuccessMsg('Cập nhật hồ sơ công ty thành công!');
     } catch (error: any) {
-      setErrorMsg(error.response?.data?.message || 'Có lỗi xảy ra');
+      toast.error(error.message || 'Có lỗi xảy ra');
     }
   };
 
-  if (loading) return <div className="p-10 text-center text-slate-500">Đang tải...</div>;
+  if (loading) return <div className="p-10 text-center text-muted-foreground dark:text-muted-foreground">Đang tải...</div>;
 
   if (!user?.companyId) {
     return (
       <div className="text-center py-20">
         <Building2 className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-        <h2 className="text-xl font-bold text-slate-900 mb-2">Chưa có hồ sơ công ty</h2>
-        <p className="text-slate-500">Hãy tạo hồ sơ công ty từ giao diện quản lý.</p>
+        <h2 className="text-xl font-bold text-foreground mb-2">Chưa có hồ sơ công ty</h2>
+        <p className="text-muted-foreground dark:text-muted-foreground">Hãy tạo hồ sơ công ty từ giao diện quản lý.</p>
       </div>
     );
   }
@@ -89,23 +88,18 @@ export default function EmployerCompanyPage() {
   return (
     <div className="max-w-3xl">
       <div className="flex items-center gap-4 mb-8">
-        <Link href="/employer/dashboard" className="text-slate-400 hover:text-slate-900 transition-colors">
+        <Link href="/employer/dashboard" className="text-muted-foreground/80 dark:text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Hồ sơ công ty</h1>
-          <p className="text-slate-500 mt-1">Thông tin hiển thị trên các tin tuyển dụng của bạn.</p>
+          <h1 className="text-2xl font-bold text-foreground">Hồ sơ công ty</h1>
+          <p className="text-muted-foreground dark:text-muted-foreground mt-1">Thông tin hiển thị trên các tin tuyển dụng của bạn.</p>
         </div>
       </div>
 
-      {successMsg && (
-        <div className="mb-6 p-4 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100">{successMsg}</div>
-      )}
-      {errorMsg && (
-        <div className="mb-6 p-4 bg-rose-50 text-rose-600 rounded-xl border border-rose-100">{errorMsg}</div>
-      )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 space-y-6">
+
+      <form onSubmit={handleSubmit(onSubmit)} className="bg-card rounded-2xl border border-border shadow-sm p-8 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2 md:col-span-2">
             <Label>Tên công ty <span className="text-rose-500">*</span></Label>

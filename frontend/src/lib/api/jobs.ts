@@ -1,48 +1,35 @@
 import axiosInstance, { PaginatedResponse, ApiResponse } from '../axios';
+import { Job, JobFilters, JobCreatePayload } from '@/types/job';
 
-export interface JobListFilters {
-  keyword?: string;
-  location?: string;
-  jobType?: string;
-  level?: string;
-  page?: string;
-  limit?: string;
-}
+export const jobsApi = {
+  getJobs: (filters?: JobFilters & { skills?: string }): Promise<PaginatedResponse<{ jobs: Job[] }>> => {
+    console.log('getJobs filters:', filters);
+    if (filters?.skills) {
+      console.log('Routing to AI Search');
+      return axiosInstance.get('/jobs/ai-search', { params: filters }) as Promise<any>;
+    }
+    console.log('Routing to Fulltext Search');
+    return axiosInstance.get('/jobs', { params: filters }) as Promise<any>;
+  },
 
-export interface Job {
-  _id: string;
-  title: string;
-  description: string;
-  requiredSkills: string[];
-  location: string;
-  salary: { min: number; max: number };
-  jobType: 'full-time' | 'part-time' | 'remote' | 'internship' | 'contract';
-  level: 'intern' | 'fresher' | 'junior' | 'middle' | 'senior' | 'lead';
-  deadline: string;
-  createdAt: string;
-  views: number;
-  company: {
-    _id: string;
-    name: string;
-    logo?: string;
-    location: string;
-    industry?: string;
-    description?: string;
-    website?: string;
-    size?: string;
-  };
-  employer: {
-    _id: string;
-    name: string;
-    avatar?: string;
-  };
-}
+  getJobById: (id: string): Promise<ApiResponse<{ job: Job; relatedJobs?: Job[] }>> => {
+    return axiosInstance.get(`/jobs/${id}`) as Promise<any>;
+  },
 
-export const getJobs = async (filters?: JobListFilters): Promise<PaginatedResponse<{ jobs: Job[] }>> => {
-  // Vì interceptor đã unwrap trả thẳng về payload của backend, nên ta ép kiểu trực tiếp:
-  return axiosInstance.get('/jobs', { params: filters }) as unknown as Promise<PaginatedResponse<{ jobs: Job[] }>>;
+  createJob: (data: JobCreatePayload): Promise<ApiResponse<{ job: Job }>> => {
+    return axiosInstance.post('/jobs', data) as Promise<any>;
+  },
+
+  updateJob: (id: string, data: Partial<JobCreatePayload>): Promise<ApiResponse<{ job: Job }>> => {
+    return axiosInstance.patch(`/jobs/${id}`, data) as Promise<any>;
+  },
+
+  deleteJob: (id: string): Promise<ApiResponse<null>> => {
+    return axiosInstance.delete(`/jobs/${id}`) as Promise<any>;
+  }
 };
 
-export const getJobById = async (id: string): Promise<ApiResponse<{ job: Job }>> => {
-  return axiosInstance.get(`/jobs/${id}`) as unknown as Promise<ApiResponse<{ job: Job }>>;
-};
+// Backward compatibility
+export const getJobs = jobsApi.getJobs;
+export const getJobById = jobsApi.getJobById;
+

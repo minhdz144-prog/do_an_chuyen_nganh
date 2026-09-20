@@ -10,7 +10,7 @@ const createCompany = async (req, res, next) => {
       return next(ApiError.badRequest('Bạn đã tạo công ty rồi, không thể tạo thêm'));
     }
 
-    const { name, logo, description, website, location, size, industry } = req.body;
+    const { name, logo, description, website, location, size, industry, employeeCount, foundedYear, techStack, benefits, coverImage, socialLinks } = req.body;
     
     // Tạo company
     const company = await Company.create({
@@ -21,6 +21,12 @@ const createCompany = async (req, res, next) => {
       location,
       size,
       industry,
+      employeeCount,
+      foundedYear,
+      techStack,
+      benefits,
+      coverImage,
+      socialLinks,
       ownerId: req.user._id
     });
 
@@ -54,7 +60,7 @@ const updateCompany = async (req, res, next) => {
       return next(ApiError.forbidden('Bạn không có quyền chỉnh sửa công ty này'));
     }
 
-    const ALLOWED_FIELDS = ['name', 'logo', 'description', 'website', 'location', 'size', 'industry'];
+    const ALLOWED_FIELDS = ['name', 'logo', 'description', 'website', 'location', 'size', 'industry', 'employeeCount', 'foundedYear', 'techStack', 'benefits', 'coverImage', 'socialLinks'];
     ALLOWED_FIELDS.forEach((field) => {
       if (req.body[field] !== undefined) {
         company[field] = req.body[field];

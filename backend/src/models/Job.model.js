@@ -20,6 +20,12 @@ jobSchema.index({ requiredSkills: 1 });
 jobSchema.index({ status: 1, deadline: 1 });
 jobSchema.index({ company: 1, employer: 1 });
 
+// Full-text search index
+jobSchema.index(
+  { title: 'text', description: 'text', requiredSkills: 'text' },
+  { weights: { title: 10, requiredSkills: 5, description: 1 }, name: 'job_fulltext' }
+);
+
 jobSchema.virtual('isExpired').get(function () {
   if (!this.deadline) return false;
   return this.deadline < new Date();

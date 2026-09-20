@@ -4,6 +4,7 @@
 const User = require('../models/User.model');
 const Job = require('../models/Job.model');
 const Application = require('../models/Application.model');
+const Company = require('../models/Company.model');  // ★ F.2: Company verification
 const ApiResponse = require('../utils/ApiResponse');
 const ApiError = require('../utils/ApiError');
 
@@ -109,4 +110,53 @@ const getStats = async (req, res, next) => {
   }
 };
 
-module.exports = { getUsers, updateUserStatus, getStats };
+/**
+ * GET /api/admin/companies — Danh sách công ty (hỗ trợ lọc theo isVerified)
+ */
+const getCompanies = async (req, res, next) => {
+  try {
+    const { isVerified, page = 1, limit = 20 } = req.query;
+    const filter = {};
+    if (isVerified !== undefined) filter.isVerified = isVerified === 'true';
+
+    const skip = (Number(page) - 1) * Number(limit);
+    const [companies, total] = await Promise.all([
+      Company.find(filter).populate('ownerId', 'name email').sort({ createdAt: -1 }).skip(skip).limit(Number(limit)),
+      Company.countDocuments(filter),
+    ]);
+
+    ApiResponse.paginated(
+      res,
+      { companies },
+      { total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / Number(limit)) }
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * PATCH /api/admin/companies/:id/verify — Duyệt/Từ chối xác minh công ty
+ * body: { isVerified: boolean }
+ */
+const verifyCompany = async (req, res, next) => {
+  try {
+    const { isVerified } = req.body;
+    if (typeof isVerified !== 'boolean') return next(ApiError.badRequest('isVerified phải là boolean'));
+
+    const company = await Company.findByIdAndUpdate(
+      req.params.id,
+      { isVerified },
+      { new: true }
+    ).populate('ownerId', 'name email');
+
+    if (!company) return next(ApiError.notFound('Không tìm thấy công ty'));
+
+    const action = isVerified ? 'xác minh' : 'hủy xác minh';
+    ApiResponse.success(res, { company }, `Đã ${action} công ty thành công`);
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getUsers, updateUserStatus, getStats, getCompanies, verifyCompany };

@@ -57,4 +57,43 @@ const getMe = async (req, res, next) => {
   }
 };
 
-module.exports = { updateMe, getMe };
+/**
+ * POST /api/users/me/saved-jobs/:jobId — Toggle bookmark job (lưu/hủy lưu)
+ * ★ F.4: Dùng $addToSet/$pull để toggle — 1 API endpoint cho cả 2 hành động
+ */
+const toggleSavedJob = async (req, res, next) => {
+  try {
+    const { jobId } = req.params;
+    const user = await User.findById(req.user._id);
+    
+    const isSaved = user.savedJobs.some(id => id.toString() === jobId);
+    
+    if (isSaved) {
+      await User.findByIdAndUpdate(req.user._id, { $pull: { savedJobs: jobId } });
+      ApiResponse.success(res, { saved: false }, 'Đã bỏ lưu tin tuyển dụng');
+    } else {
+      await User.findByIdAndUpdate(req.user._id, { $addToSet: { savedJobs: jobId } });
+      ApiResponse.success(res, { saved: true }, 'Đã lưu tin tuyển dụng');
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/users/me/saved-jobs — Lấy danh sách jobs đã bookmark
+ */
+const getSavedJobs = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .populate({
+        path: 'savedJobs',
+        populate: { path: 'company', select: 'name logo location' },
+      });
+    ApiResponse.success(res, { savedJobs: user.savedJobs || [] }, 'Lấy danh sách đã lưu thành công');
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { updateMe, getMe, toggleSavedJob, getSavedJobs };
